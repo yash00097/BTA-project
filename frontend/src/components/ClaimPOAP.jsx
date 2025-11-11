@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useAccount, useReadContract, useWriteContract } from "wagmi";
 import { CONTRACT_ADDRESS, CONTRACT_ABI } from "../config";
+import { toast } from "react-toastify";
 
-const ClaimPOAP = () => {
+
+const ClaimPOAP = ({ onMintSuccess }) => {
   const { address, isConnected } = useAccount();
   const [status, setStatus] = useState("");
 
@@ -20,6 +22,7 @@ const ClaimPOAP = () => {
   const handleClaim = async () => {
     try {
       setStatus("⏳ Minting your POAP...");
+      toast.info("Transaction submitted. Please confirm in MetaMask.");
       await writeContract({
         address: CONTRACT_ADDRESS,
         abi: CONTRACT_ABI,
@@ -27,10 +30,14 @@ const ClaimPOAP = () => {
         args: [address],
       });
       setStatus("✅ POAP minted successfully!");
+      toast.success("POAP minted successfully 🎉");
+
+      if (onMintSuccess) onMintSuccess();
       refetch(); // Refresh claimed status
     } catch (error) {
       console.error(error);
       setStatus("❌ Error minting POAP. Maybe already claimed?");
+      toast.error("Mint failed: " + (error?.message || "Unknown error"));
     }
   };
 

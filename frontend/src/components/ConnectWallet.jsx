@@ -1,76 +1,49 @@
 import React from "react";
-import { useAccount, useConnect, useDisconnect } from "wagmi";
+import { useAccount, useConnect, useDisconnect, useEnsName } from "wagmi";
+import { toast } from "react-toastify";
+
 
 const ConnectWallet = () => {
   const { address, isConnected } = useAccount();
   const { connect, connectors, error, isPending } = useConnect();
   const { disconnect } = useDisconnect();
 
-  const metaMaskConnector = connectors.find(
-    (connector) => connector.name === "MetaMask"
-  );
+  const metaMaskConnector = connectors.find(c => c.name === "MetaMask");
 
-  // 🧩 Function to switch to Sepolia automatically
-  const switchToSepolia = async () => {
-    if (window.ethereum) {
-      try {
-        // Try switching first
-        await window.ethereum.request({
-          method: "wallet_switchEthereumChain",
-          params: [{ chainId: "0xaa36a7" }], // 0xaa36a7 = 11155111 (Sepolia)
-        });
-      } catch (switchError) {
-        // If not added, request to add it
-        if (switchError.code === 4902) {
-          try {
-            await window.ethereum.request({
-              method: "wallet_addEthereumChain",
-              params: [
-                {
-                  chainId: "0xaa36a7",
-                  chainName: "Sepolia Test Network",
-                  rpcUrls: ["https://eth-sepolia.g.alchemy.com/v2/"], // optional custom RPC
-                  nativeCurrency: {
-                    name: "SepoliaETH",
-                    symbol: "ETH",
-                    decimals: 18,
-                  },
-                  blockExplorerUrls: ["https://sepolia.etherscan.io/"],
-                },
-              ],
-            });
-          } catch (addError) {
-            console.error("User rejected adding Sepolia:", addError);
-          }
-        }
+  // resolve ENS (if available)
+  const { data: ensName } = useEnsName({ address });
+
+  const handleConnect = async () => {
+    try {
+      if (metaMaskConnector) {
+        await connect({ connector: metaMaskConnector });
+        toast.success("Wallet connected successfully 🦊");
       }
+    } catch (error) {
+      toast.error("Connection failed: " + error.message);
     }
   };
 
-  // 🪙 Handle connection
-  const handleConnect = async () => {
-    await switchToSepolia();
-    if (metaMaskConnector) connect({ connector: metaMaskConnector });
-  };
-
   return (
-    <div style={{ textAlign: "center", marginTop: "20px" }}>
+    <div className="text-center my-6">
       {isConnected ? (
         <>
-          <p>
+          <p className="text-sm text-green-400">
             🟢 Connected: <strong>{address}</strong>
+            {ensName ? <span className="ml-2 text-gray-300">({ensName})</span> : null}
           </p>
-          <button onClick={() => disconnect()}>Disconnect</button>
+          <button className="mt-3 px-4 py-2 border rounded" onClick={() => disconnect()}>Disconnect</button>
         </>
       ) : (
         <button
           onClick={handleConnect}
           disabled={!metaMaskConnector || isPending}
+          className="px-4 py-2 border rounded hover:bg-gray-800"
         >
           {isPending ? "Connecting..." : "Connect Wallet"}
         </button>
       )}
-      {error && <p style={{ color: "red" }}>⚠️ {error.message}</p>}
+      {error && <p className="text-red-500 mt-2">⚠️ {error.message}</p>}
     </div>
   );
 };

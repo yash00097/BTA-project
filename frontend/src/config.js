@@ -1,4 +1,4 @@
 import abi from "./abi/POAP.json";
 
-export const CONTRACT_ADDRESS = "0x45B8F72942fAEceA84159921804EE1De4e7fe11c";
+export const CONTRACT_ADDRESS = "0x9B55d17d8dAd991D6B714EA2c73244831ff8E098";
 export const CONTRACT_ABI = abi.abi;

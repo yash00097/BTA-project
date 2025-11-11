@@ -1,41 +1,54 @@
 import React from "react";
+import { useState } from "react";
 import { WagmiProvider, createConfig, http } from "wagmi";
 import { sepolia } from "@wagmi/core/chains";
 import { metaMask } from "@wagmi/connectors";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import ConnectWallet from "./components/ConnectWallet";
 import ClaimPOAP from "./components/ClaimPOAP";
+import TotalAttendees from "./components/TotalAttendees";
+import MyPOAPs from "./components/MyPOAPs";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
+
 
 const queryClient = new QueryClient();
 
 const config = createConfig({
-  chains: [sepolia],
+  chains: [sepolia], // 👈 explicitly tell wagmi to use Sepolia Testnet
+  autoConnect: true,
   connectors: [metaMask()],
   transports: {
-    [sepolia.id]: http(),
+    [sepolia.id]: http(), // 👈 http provider for Sepolia
   },
 });
 
 function App() {
+  const [refreshKey, setRefreshKey] = useState(0);
   return (
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
-        <div
-          style={{
-            textAlign: "center",
-            marginTop: "50px",
-            color: "#fff",
-            backgroundColor: "#1a1a1a",
-            minHeight: "100vh",
-            padding: "2rem",
-          }}
-        >
-          <h1>
-            🎟️ <b>On-Chain Attendance (POAP)</b>
-          </h1>
+        <div className="container mx-auto px-6 py-10">
+          <h1 className="text-4xl font-bold mb-6">🎟️ On-Chain Attendance (POAP)</h1>
           <ConnectWallet />
-          <ClaimPOAP />
+          <div className="mt-6">
+            <TotalAttendees key={refreshKey}/>
+            <ClaimPOAP onMintSuccess={() => setRefreshKey(k => k + 1)}/>
+            <MyPOAPs />
+          </div>
         </div>
+        <ToastContainer
+          position="bottom-right"
+          autoClose={3000}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="dark"
+        />
       </QueryClientProvider>
     </WagmiProvider>
   );
