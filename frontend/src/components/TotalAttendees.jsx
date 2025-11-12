@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { BrowserProvider, Contract } from "ethers";
-import { CONTRACT_ADDRESS, CONTRACT_ABI } from "../config";
+import { POAP_CONTRACT_ADDRESS, POAP_ABI } from "../config";
 
 const TotalAttendees = () => {
   const [count, setCount] = useState(null);
@@ -9,7 +9,7 @@ const TotalAttendees = () => {
     const load = async () => {
       try {
         const provider = new BrowserProvider(window.ethereum);
-        const contract = new Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
+        const contract = new Contract(POAP_CONTRACT_ADDRESS, POAP_ABI, provider);
         const nextId = await contract.nextTokenId();
         setCount(Number(nextId));
       } catch (err) {
@@ -20,9 +20,11 @@ const TotalAttendees = () => {
   }, []); 
 
   return (
-    <div className="my-4">
-      <h3 className="text-lg">Total attendees</h3>
-      <p className="text-2xl font-bold">{count ?? "Loading..."}</p>
+    <div className="my-4 text-center">
+      <h3 className="text-lg font-semibold text-gray-300">Total Attendees</h3>
+      <p className="text-2xl font-bold text-green-400">
+        {count !== null ? count : "Loading..."}
+      </p>
     </div>
   );
 };
