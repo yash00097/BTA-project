@@ -8,6 +8,7 @@ import ConnectWallet from "./components/ConnectWallet";
 import ClaimPOAP from "./components/ClaimPOAP";
 import TotalAttendees from "./components/TotalAttendees";
 import MyPOAPs from "./components/MyPOAPs";
+import CertificateDetails from "./components/CertificateDetails";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -36,6 +37,10 @@ function App() {
             <TotalAttendees key={refreshKey}/>
             <ClaimPOAP onMintSuccess={() => setRefreshKey(k => k + 1)}/>
             <MyPOAPs />
+            <h2 className="text-2xl font-semibold text-gray-300 mt-10 mb-4">
+              🎓 Certificate Details
+            </h2>
+            <CertificateDetails key={refreshKey} />
           </div>
         </div>
         <ToastContainer

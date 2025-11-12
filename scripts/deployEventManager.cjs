@@ -1,19 +1,16 @@
-// scripts/deployEventManager.cjs
 const hre = require("hardhat");
 
 async function main() {
-  const POAP_ADDRESS = "0xbD347fe7Bb315fCcfC90D3f16ADDa3613346Cbb9"; // ✅ your deployed POAP address
+  const POAP_ADDRESS = "0x752D845dAa0Aa41C991188e18c6fb3d80e4d0260"; // your POAP address
 
   const EventManager = await hre.ethers.getContractFactory("EventManager");
   const eventManager = await EventManager.deploy(POAP_ADDRESS);
-
-  // 🟢 FIXED: ethers v6 uses waitForDeployment() instead of deployed()
   await eventManager.waitForDeployment();
 
-  console.log(`✅ EventManager deployed successfully at: ${eventManager.target}`);
+  console.log(`✅ EventManager deployed at: ${eventManager.target}`);
 }
 
-main().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
+main().catch((err) => {
+  console.error(err);
+  process.exit(1);
 });

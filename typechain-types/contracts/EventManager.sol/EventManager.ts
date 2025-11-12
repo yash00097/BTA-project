@@ -25,7 +25,12 @@ import type {
 
 export interface EventManagerInterface extends Interface {
   getFunction(
-    nameOrSignature: "attended" | "certificates" | "confirmAttendance" | "poap"
+    nameOrSignature:
+      | "attended"
+      | "certificates"
+      | "confirmAttendance"
+      | "getCertificate"
+      | "poap"
   ): FunctionFragment;
 
   getEvent(nameOrSignatureOrTopic: "AttendanceConfirmed"): EventFragment;
@@ -42,6 +47,10 @@ export interface EventManagerInterface extends Interface {
     functionFragment: "confirmAttendance",
     values: [string]
   ): string;
+  encodeFunctionData(
+    functionFragment: "getCertificate",
+    values: [AddressLike]
+  ): string;
   encodeFunctionData(functionFragment: "poap", values?: undefined): string;
 
   decodeFunctionResult(functionFragment: "attended", data: BytesLike): Result;
@@ -51,6 +60,10 @@ export interface EventManagerInterface extends Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "confirmAttendance",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getCertificate",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "poap", data: BytesLike): Result;
@@ -133,6 +146,18 @@ export interface EventManager extends BaseContract {
 
   confirmAttendance: TypedContractMethod<[ens: string], [void], "nonpayable">;
 
+  getCertificate: TypedContractMethod<
+    [user: AddressLike],
+    [
+      [bigint, bigint, string] & {
+        eventId: bigint;
+        timestamp: bigint;
+        ens: string;
+      }
+    ],
+    "view"
+  >;
+
   poap: TypedContractMethod<[], [string], "view">;
 
   getFunction<T extends ContractMethod = ContractMethod>(
@@ -158,6 +183,19 @@ export interface EventManager extends BaseContract {
   getFunction(
     nameOrSignature: "confirmAttendance"
   ): TypedContractMethod<[ens: string], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "getCertificate"
+  ): TypedContractMethod<
+    [user: AddressLike],
+    [
+      [bigint, bigint, string] & {
+        eventId: bigint;
+        timestamp: bigint;
+        ens: string;
+      }
+    ],
+    "view"
+  >;
   getFunction(
     nameOrSignature: "poap"
   ): TypedContractMethod<[], [string], "view">;

@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-// This interface allows EventManager to call the mintPOAP() function in your deployed POAP.sol
 interface IPOAP {
     function mintPOAP(address attendee) external;
 }
@@ -24,21 +23,30 @@ contract EventManager {
         poap = IPOAP(_poap);
     }
 
-    // Called from your frontend
     function confirmAttendance(string memory ens) external {
         require(!attended[msg.sender], "Already confirmed");
         attended[msg.sender] = true;
 
-        // Mint a POAP NFT to this user
+        // Mint POAP
         poap.mintPOAP(msg.sender);
 
-        // Store timestamp certificate
+        // ✅ Store certificate data
         certificates[msg.sender] = Certificate({
-            eventId: 1, // You can make this dynamic later
+            eventId: 1,
             timestamp: block.timestamp,
             ens: ens
         });
 
         emit AttendanceConfirmed(msg.sender, ens, block.timestamp);
+    }
+
+    // ✅ New getter
+    function getCertificate(address user)
+        external
+        view
+        returns (uint256 eventId, uint256 timestamp, string memory ens)
+    {
+        Certificate memory cert = certificates[user];
+        return (cert.eventId, cert.timestamp, cert.ens);
     }
 }
