@@ -34,7 +34,7 @@ function App() {
           <h1 className="text-4xl font-bold mb-6">🎟️ On-Chain Attendance (POAP)</h1>
           <ConnectWallet />
           <div className="mt-6">
-            <TotalAttendees key={refreshKey}/>
+            <TotalAttendees refreshSignal={refreshKey} />
             <ClaimPOAP onMintSuccess={() => setRefreshKey(k => k + 1)}/>
             <MyPOAPs />
             <h2 className="text-2xl font-semibold text-gray-300 mt-10 mb-4">

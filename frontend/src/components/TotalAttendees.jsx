@@ -1,29 +1,32 @@
-import React, { useEffect, useState } from "react";
-import { BrowserProvider, Contract } from "ethers";
+import React, { useEffect } from "react";
+import { useReadContract } from "wagmi";
 import { POAP_CONTRACT_ADDRESS, POAP_ABI } from "../config";
 
-const TotalAttendees = () => {
-  const [count, setCount] = useState(null);
+// Accept a refresh signal via props (incrementing value) to manually refetch.
+const TotalAttendees = ({ refreshSignal }) => {
+  const {
+    data: nextTokenId,
+    isLoading,
+    refetch,
+  } = useReadContract({
+    address: POAP_CONTRACT_ADDRESS,
+    abi: POAP_ABI,
+    functionName: "nextTokenId",
+  });
 
+  // When refreshSignal changes, trigger a refetch (e.g., after successful mint)
   useEffect(() => {
-    const load = async () => {
-      try {
-        const provider = new BrowserProvider(window.ethereum);
-        const contract = new Contract(POAP_CONTRACT_ADDRESS, POAP_ABI, provider);
-        const nextId = await contract.nextTokenId();
-        setCount(Number(nextId));
-      } catch (err) {
-        console.error("TotalAttendees error", err);
-      }
-    };
-    load();
-  }, []); 
+    if (refreshSignal !== undefined) {
+      refetch?.();
+    }
+  }, [refreshSignal, refetch]);
+
+  const count = Number(nextTokenId ?? 0);
 
   return (
     <div className="my-4 text-center">
-      <h3 className="text-lg font-semibold text-gray-300">Total Attendees</h3>
-      <p className="text-2xl font-bold text-green-400">
-        {count !== null ? count : "Loading..."}
+      <p className="text-lg font-semibold text-gray-300">
+        Total Attendees: <span className="text-2xl font-bold text-green-400 align-middle">{isLoading ? "…" : count}</span>
       </p>
     </div>
   );
