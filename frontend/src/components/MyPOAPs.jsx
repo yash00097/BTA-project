@@ -4,34 +4,46 @@ import { POAP_CONTRACT_ADDRESS, POAP_ABI } from "../config";
 
 const MyPOAPs = () => {
   const [tokens, setTokens] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const load = async () => {
       try {
-        if (!window.ethereum) {
-          alert("Please install MetaMask!");
-          return;
-        }
-
+        if (!window.ethereum) return;
         setLoading(true);
+
         const provider = new BrowserProvider(window.ethereum);
         const signer = await provider.getSigner();
         const address = await signer.getAddress();
 
         const contract = new Contract(POAP_CONTRACT_ADDRESS, POAP_ABI, provider);
-        const totalSupply = await contract.nextTokenId();
+        const total = await contract.nextTokenId();
 
         const owned = [];
 
-        for (let i = 0; i < totalSupply; i++) {
+        for (let i = 0; i < Number(total); i++) {
           try {
             const owner = await contract.ownerOf(i);
+
             if (owner.toLowerCase() === address.toLowerCase()) {
-              owned.push(i);
+              let metadata = null;
+              try {
+                const tokenURI = await contract.tokenURI(i);
+                console.log("Fetched tokenURI:", tokenURI);
+                const httpUrl = tokenURI.startsWith("ipfs://")
+                  ? tokenURI.replace("ipfs://", "https://dweb.link/ipfs/")
+                  : tokenURI;
+                console.log("Fetching metadata from:", httpUrl);
+                const res = await fetch(httpUrl);
+                metadata = await res.json();
+              } catch (metaErr) {
+                console.warn("Metadata fetch failed for token", i, metaErr);
+              }
+
+              owned.push({ tokenId: i, metadata });
             }
-          } catch {
-            continue; // skip if token doesn't exist
+          } catch  {
+            continue;
           }
         }
 
@@ -47,20 +59,30 @@ const MyPOAPs = () => {
   }, []);
 
   return (
-    <div className="my-6 text-center">
-      <h3 className="text-lg font-semibold text-gray-300">My POAPs</h3>
+    <div className="my-6">
+      <h3 className="text-lg font-semibold">My POAPs</h3>
+
       {loading ? (
-        <p className="text-gray-400">Loading your POAPs...</p>
-      ) : tokens.length > 0 ? (
-        <ul className="mt-2">
-          {tokens.map((id) => (
-            <li key={id} className="text-green-400">
-              🪪 Token #{id}
-            </li>
-          ))}
-        </ul>
+        <p>Loading...</p>
+      ) : tokens.length ? (
+        tokens.map((t) => (
+          <div key={t.tokenId} className="p-3 border rounded my-2">
+            <strong>Token #{t.tokenId}</strong>
+
+            {t.metadata ? (
+              <div className="mt-2">
+                <div><strong>Name:</strong> {t.metadata.name}</div>
+                <div><strong>Description:</strong> {t.metadata.description}</div>
+                <div><strong>Event:</strong> {t.metadata.event}</div>
+                <div><strong>Issued On:</strong> {t.metadata.issuedOn || "N/A"}</div>
+              </div>
+            ) : (
+              <div className="mt-2 text-gray-500">No metadata available</div>
+            )}
+          </div>
+        ))
       ) : (
-        <p className="text-gray-400">You don’t have any POAPs yet.</p>
+        <p>No POAPs yet</p>
       )}
     </div>
   );

@@ -25,7 +25,7 @@ export interface IPOAPInterface extends Interface {
 
   encodeFunctionData(
     functionFragment: "mintPOAP",
-    values: [AddressLike]
+    values: [AddressLike, string]
   ): string;
 
   decodeFunctionResult(functionFragment: "mintPOAP", data: BytesLike): Result;
@@ -74,7 +74,11 @@ export interface IPOAP extends BaseContract {
     event?: TCEvent
   ): Promise<this>;
 
-  mintPOAP: TypedContractMethod<[attendee: AddressLike], [void], "nonpayable">;
+  mintPOAP: TypedContractMethod<
+    [attendee: AddressLike, tokenURI: string],
+    [void],
+    "nonpayable"
+  >;
 
   getFunction<T extends ContractMethod = ContractMethod>(
     key: string | FunctionFragment
@@ -82,7 +86,11 @@ export interface IPOAP extends BaseContract {
 
   getFunction(
     nameOrSignature: "mintPOAP"
-  ): TypedContractMethod<[attendee: AddressLike], [void], "nonpayable">;
+  ): TypedContractMethod<
+    [attendee: AddressLike, tokenURI: string],
+    [void],
+    "nonpayable"
+  >;
 
   filters: {};
 }

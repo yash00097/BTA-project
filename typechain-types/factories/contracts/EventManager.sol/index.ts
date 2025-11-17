@@ -3,3 +3,4 @@
 /* eslint-disable */
 export { EventManager__factory } from "./EventManager__factory";
 export { IPOAP__factory } from "./IPOAP__factory";
+export { POAP__factory } from "./POAP__factory";

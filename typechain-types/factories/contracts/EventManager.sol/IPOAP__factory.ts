@@ -16,6 +16,11 @@ const _abi = [
         name: "attendee",
         type: "address",
       },
+      {
+        internalType: "string",
+        name: "tokenURI",
+        type: "string",
+      },
     ],
     name: "mintPOAP",
     outputs: [],

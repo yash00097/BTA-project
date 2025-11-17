@@ -38,5 +38,5 @@ export type { EventManager } from "./contracts/EventManager.sol/EventManager";
 export { EventManager__factory } from "./factories/contracts/EventManager.sol/EventManager__factory";
 export type { IPOAP } from "./contracts/EventManager.sol/IPOAP";
 export { IPOAP__factory } from "./factories/contracts/EventManager.sol/IPOAP__factory";
-export type { POAP } from "./contracts/POAP";
-export { POAP__factory } from "./factories/contracts/POAP__factory";
+export type { POAP } from "./contracts/EventManager.sol/POAP";
+export { POAP__factory } from "./factories/contracts/EventManager.sol/POAP__factory";

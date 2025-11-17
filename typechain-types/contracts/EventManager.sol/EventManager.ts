@@ -29,11 +29,21 @@ export interface EventManagerInterface extends Interface {
       | "attended"
       | "certificates"
       | "confirmAttendance"
+      | "eventMetadataURI"
       | "getCertificate"
+      | "owner"
       | "poap"
+      | "renounceOwnership"
+      | "setEventMetadataURI"
+      | "transferOwnership"
   ): FunctionFragment;
 
-  getEvent(nameOrSignatureOrTopic: "AttendanceConfirmed"): EventFragment;
+  getEvent(
+    nameOrSignatureOrTopic:
+      | "AttendanceConfirmed"
+      | "EventMetadataUpdated"
+      | "OwnershipTransferred"
+  ): EventFragment;
 
   encodeFunctionData(
     functionFragment: "attended",
@@ -48,10 +58,27 @@ export interface EventManagerInterface extends Interface {
     values: [string]
   ): string;
   encodeFunctionData(
+    functionFragment: "eventMetadataURI",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
     functionFragment: "getCertificate",
     values: [AddressLike]
   ): string;
+  encodeFunctionData(functionFragment: "owner", values?: undefined): string;
   encodeFunctionData(functionFragment: "poap", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "renounceOwnership",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "setEventMetadataURI",
+    values: [string]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "transferOwnership",
+    values: [AddressLike]
+  ): string;
 
   decodeFunctionResult(functionFragment: "attended", data: BytesLike): Result;
   decodeFunctionResult(
@@ -63,10 +90,27 @@ export interface EventManagerInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
+    functionFragment: "eventMetadataURI",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "getCertificate",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "poap", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "renounceOwnership",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "setEventMetadataURI",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "transferOwnership",
+    data: BytesLike
+  ): Result;
 }
 
 export namespace AttendanceConfirmedEvent {
@@ -80,6 +124,31 @@ export namespace AttendanceConfirmedEvent {
     attendee: string;
     ens: string;
     timestamp: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace EventMetadataUpdatedEvent {
+  export type InputTuple = [newURI: string];
+  export type OutputTuple = [newURI: string];
+  export interface OutputObject {
+    newURI: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace OwnershipTransferredEvent {
+  export type InputTuple = [previousOwner: AddressLike, newOwner: AddressLike];
+  export type OutputTuple = [previousOwner: string, newOwner: string];
+  export interface OutputObject {
+    previousOwner: string;
+    newOwner: string;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -146,6 +215,8 @@ export interface EventManager extends BaseContract {
 
   confirmAttendance: TypedContractMethod<[ens: string], [void], "nonpayable">;
 
+  eventMetadataURI: TypedContractMethod<[], [string], "view">;
+
   getCertificate: TypedContractMethod<
     [user: AddressLike],
     [
@@ -158,7 +229,23 @@ export interface EventManager extends BaseContract {
     "view"
   >;
 
+  owner: TypedContractMethod<[], [string], "view">;
+
   poap: TypedContractMethod<[], [string], "view">;
+
+  renounceOwnership: TypedContractMethod<[], [void], "nonpayable">;
+
+  setEventMetadataURI: TypedContractMethod<
+    [_uri: string],
+    [void],
+    "nonpayable"
+  >;
+
+  transferOwnership: TypedContractMethod<
+    [newOwner: AddressLike],
+    [void],
+    "nonpayable"
+  >;
 
   getFunction<T extends ContractMethod = ContractMethod>(
     key: string | FunctionFragment
@@ -184,6 +271,9 @@ export interface EventManager extends BaseContract {
     nameOrSignature: "confirmAttendance"
   ): TypedContractMethod<[ens: string], [void], "nonpayable">;
   getFunction(
+    nameOrSignature: "eventMetadataURI"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
     nameOrSignature: "getCertificate"
   ): TypedContractMethod<
     [user: AddressLike],
@@ -197,8 +287,20 @@ export interface EventManager extends BaseContract {
     "view"
   >;
   getFunction(
+    nameOrSignature: "owner"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
     nameOrSignature: "poap"
   ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "renounceOwnership"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "setEventMetadataURI"
+  ): TypedContractMethod<[_uri: string], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "transferOwnership"
+  ): TypedContractMethod<[newOwner: AddressLike], [void], "nonpayable">;
 
   getEvent(
     key: "AttendanceConfirmed"
@@ -206,6 +308,20 @@ export interface EventManager extends BaseContract {
     AttendanceConfirmedEvent.InputTuple,
     AttendanceConfirmedEvent.OutputTuple,
     AttendanceConfirmedEvent.OutputObject
+  >;
+  getEvent(
+    key: "EventMetadataUpdated"
+  ): TypedContractEvent<
+    EventMetadataUpdatedEvent.InputTuple,
+    EventMetadataUpdatedEvent.OutputTuple,
+    EventMetadataUpdatedEvent.OutputObject
+  >;
+  getEvent(
+    key: "OwnershipTransferred"
+  ): TypedContractEvent<
+    OwnershipTransferredEvent.InputTuple,
+    OwnershipTransferredEvent.OutputTuple,
+    OwnershipTransferredEvent.OutputObject
   >;
 
   filters: {
@@ -218,6 +334,28 @@ export interface EventManager extends BaseContract {
       AttendanceConfirmedEvent.InputTuple,
       AttendanceConfirmedEvent.OutputTuple,
       AttendanceConfirmedEvent.OutputObject
+    >;
+
+    "EventMetadataUpdated(string)": TypedContractEvent<
+      EventMetadataUpdatedEvent.InputTuple,
+      EventMetadataUpdatedEvent.OutputTuple,
+      EventMetadataUpdatedEvent.OutputObject
+    >;
+    EventMetadataUpdated: TypedContractEvent<
+      EventMetadataUpdatedEvent.InputTuple,
+      EventMetadataUpdatedEvent.OutputTuple,
+      EventMetadataUpdatedEvent.OutputObject
+    >;
+
+    "OwnershipTransferred(address,address)": TypedContractEvent<
+      OwnershipTransferredEvent.InputTuple,
+      OwnershipTransferredEvent.OutputTuple,
+      OwnershipTransferredEvent.OutputObject
+    >;
+    OwnershipTransferred: TypedContractEvent<
+      OwnershipTransferredEvent.InputTuple,
+      OwnershipTransferredEvent.OutputTuple,
+      OwnershipTransferredEvent.OutputObject
     >;
   };
 }

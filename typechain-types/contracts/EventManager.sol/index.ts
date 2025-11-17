@@ -3,3 +3,4 @@
 /* eslint-disable */
 export type { EventManager } from "./EventManager";
 export type { IPOAP } from "./IPOAP";
+export type { POAP } from "./POAP";

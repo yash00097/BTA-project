@@ -1,0 +1,10 @@
+{
+  "name": "BTA On-Chain Meetup — Attendance POAP",
+  "description": "Proof of attendance for the BTA On-Chain Meetup. This token verifies the holder attended the event.",
+  "event": "BTA On-Chain Meetup",
+  "organizer": "Yashwanth V",
+  "issuedBy": "On-Chain Attendance System",
+  "issuedOn": "2025-11-12T18:30:00Z",
+  "notes": "This metadata intentionally contains no image.",
+  "version": "1"
+}

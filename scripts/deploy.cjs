@@ -1,7 +1,7 @@
 const { ethers } = require("hardhat");
 
 async function main() {
-  const POAP = await ethers.getContractFactory("POAP");
+  const POAP = await hre.ethers.getContractFactory("contracts/POAP.sol:POAP");
   const poap = await POAP.deploy();
   await poap.waitForDeployment();
 

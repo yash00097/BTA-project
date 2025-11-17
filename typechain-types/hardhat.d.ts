@@ -81,6 +81,10 @@ declare module "hardhat/types/runtime" {
       name: "POAP",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.POAP__factory>;
+    getContractFactory(
+      name: "POAP",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.POAP__factory>;
 
     getContractAt(
       name: "Ownable",
@@ -167,6 +171,11 @@ declare module "hardhat/types/runtime" {
       address: string | ethers.Addressable,
       signer?: ethers.Signer
     ): Promise<Contracts.POAP>;
+    getContractAt(
+      name: "POAP",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.POAP>;
 
     deployContract(
       name: "Ownable",
@@ -232,6 +241,10 @@ declare module "hardhat/types/runtime" {
       name: "IPOAP",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.IPOAP>;
+    deployContract(
+      name: "POAP",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.POAP>;
     deployContract(
       name: "POAP",
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -317,6 +330,11 @@ declare module "hardhat/types/runtime" {
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.IPOAP>;
+    deployContract(
+      name: "POAP",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.POAP>;
     deployContract(
       name: "POAP",
       args: any[],
