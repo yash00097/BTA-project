@@ -1,8 +1,8 @@
 import React, { useEffect } from "react";
 import { useReadContract } from "wagmi";
+import { motion } from "framer-motion";
 import { POAP_CONTRACT_ADDRESS, POAP_ABI } from "../config";
 
-// Accept a refresh signal via props (incrementing value) to manually refetch.
 const TotalAttendees = ({ refreshSignal }) => {
   const {
     data: nextTokenId,
@@ -14,7 +14,6 @@ const TotalAttendees = ({ refreshSignal }) => {
     functionName: "nextTokenId",
   });
 
-  // When refreshSignal changes, trigger a refetch (e.g., after successful mint)
   useEffect(() => {
     if (refreshSignal !== undefined) {
       refetch?.();
@@ -24,11 +23,29 @@ const TotalAttendees = ({ refreshSignal }) => {
   const count = Number(nextTokenId ?? 0);
 
   return (
-    <div className="my-4 text-center">
-      <p className="text-lg font-semibold text-gray-300">
-        Total Attendees: <span className="text-2xl font-bold text-green-400 align-middle">{isLoading ? "…" : count}</span>
-      </p>
-    </div>
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.5 }}
+      className="glass-card p-8 text-center max-w-md mx-auto"
+    >
+      <div className="text-4xl mb-3">👥</div>
+      <h3 className="text-lg text-gray-400 mb-2">Total Event Attendees</h3>
+      <motion.div
+        key={count}
+        initial={{ scale: 1.5, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ type: "spring", stiffness: 200, damping: 15 }}
+        className="text-6xl font-black gradient-text"
+      >
+        {isLoading ? (
+          <div className="shimmer h-16 w-32 mx-auto rounded-lg"></div>
+        ) : (
+          count
+        )}
+      </motion.div>
+      <p className="text-sm text-gray-400 mt-4">POAPs minted on-chain</p>
+    </motion.div>
   );
 };
 

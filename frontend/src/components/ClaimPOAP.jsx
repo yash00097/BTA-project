@@ -1,6 +1,6 @@
-// src/components/ClaimPOAP.jsx
 import React, { useEffect, useState } from "react";
-import { useAccount, useEnsName, useReadContract, useWriteContract } from "wagmi";
+import { useAccount, useEnsName, useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
+import { motion, AnimatePresence } from "framer-motion";
 import { POAP_CONTRACT_ADDRESS, POAP_ABI, EVENT_CONTRACT_ADDRESS, EVENT_ABI } from "../config";
 import { toast } from "react-toastify";
 
@@ -8,9 +8,8 @@ const ClaimPOAP = ({ onMintSuccess }) => {
   const { address, isConnected } = useAccount();
   const { data: ensName } = useEnsName({ address });
   const [status, setStatus] = useState("");
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [txHash, setTxHash] = useState(null);
 
-  // read hasClaimed from POAP contract
   const { data: hasClaimed, refetch: refetchHasClaimed } = useReadContract({
     address: POAP_CONTRACT_ADDRESS,
     abi: POAP_ABI,
@@ -19,11 +18,25 @@ const ClaimPOAP = ({ onMintSuccess }) => {
     enabled: !!address,
   });
 
-  const { writeContract: writeEvent } = useWriteContract(); // for EventManager
-  const { writeContract: writePoap } = useWriteContract(); // for direct mint fallback
+  const { writeContract: writeEvent } = useWriteContract();
+  const { writeContract: writePoap } = useWriteContract();
+
+  const { isLoading: isTxPending, isSuccess: isTxSuccess } = useWaitForTransactionReceipt({
+    hash: txHash,
+  });
 
   useEffect(() => {
-    if (hasClaimed) setStatus("✅ You’ve already claimed your POAP!");
+    if (isTxSuccess && txHash) {
+      refetchHasClaimed();
+      if (onMintSuccess) onMintSuccess();
+      setStatus("✅ POAP claimed successfully!");
+      toast.success("POAP minted successfully 🎉");
+      setTxHash(null);
+    }
+  }, [isTxSuccess, txHash, refetchHasClaimed, onMintSuccess]);
+
+  useEffect(() => {
+    if (hasClaimed) setStatus("✅ You've already claimed your POAP!");
     else setStatus("");
   }, [hasClaimed]);
 
@@ -44,104 +57,122 @@ const ClaimPOAP = ({ onMintSuccess }) => {
       return;
     }
 
-    setIsProcessing(true);
     setStatus("⏳ Preparing transaction...");
+    toast.info("Please confirm the transaction in your wallet.");
 
     try {
-      // PREFERRED: call EventManager.confirmAttendance(ens)
+      let hash;
       if (EVENT_CONTRACT_ADDRESS && EVENT_CONTRACT_ADDRESS !== "0xYourEventManagerAddressHere") {
         const ensToSend = ensName || "";
-        setStatus("⏳ Sending attendance confirmation to EventManager...");
-        toast.info("Please confirm the transaction in your wallet.");
-        const tx = await writeEvent({
+        setStatus("⏳ Confirming attendance...");
+        hash = await writeEvent({
           address: EVENT_CONTRACT_ADDRESS,
           abi: EVENT_ABI,
           functionName: "confirmAttendance",
           args: [ensToSend],
         });
-
-        // Some wagmi helpers return tx object, some return a promise that resolves after mining.
-        // If tx.wait exists, wait for mining.
-        if (tx && typeof tx.wait === "function") {
-          setStatus("⏳ Waiting for transaction to be mined...");
-          await tx.wait();
-        } else {
-          // best-effort: small delay for networks that return hash only
-          setStatus("⏳ Transaction submitted. Waiting briefly...");
-          await new Promise(r => setTimeout(r, 8000));
-        }
-
-        setStatus("✅ Attendance confirmed. POAP should be minted by the EventManager.");
-        toast.success("Attendance recorded. Check My POAPs in a moment.");
-
-        // refresh POAP claimed status
-        await refetchHasClaimed?.();
-
-        if (onMintSuccess) onMintSuccess();
-        setIsProcessing(false);
-        return;
-      }
-
-      // FALLBACK: direct mint on POAP contract (requires your wallet to be POAP.owner)
-      setStatus("⚠️ EventManager address not configured. Attempting direct POAP mint (owner only).");
-      toast.info("Attempting direct POAP mint (owner only). Please confirm in MetaMask.");
-      const tx2 = await writePoap({
-        address: POAP_CONTRACT_ADDRESS,
-        abi: POAP_ABI,
-        functionName: "mintPOAP",
-        args: [address],
-      });
-
-      if (tx2 && typeof tx2.wait === "function") {
-        setStatus("⏳ Waiting for POAP mint to be mined...");
-        await tx2.wait();
       } else {
-        await new Promise(r => setTimeout(r, 8000));
+        setStatus("⏳ Minting POAP...");
+        hash = await writePoap({
+          address: POAP_CONTRACT_ADDRESS,
+          abi: POAP_ABI,
+          functionName: "mintPOAP",
+          args: [address],
+        });
       }
-
-      setStatus("✅ POAP minted successfully (fallback).");
-      toast.success("POAP minted successfully 🎉");
-      await refetchHasClaimed?.();
-      if (onMintSuccess) onMintSuccess();
+      
+      if (hash) {
+        setTxHash(hash);
+        setStatus("⏳ Transaction submitted. Waiting for confirmation...");
+      }
     } catch (err) {
       console.error("ClaimPOAP error:", err);
       const msg = err?.message || String(err);
       setStatus("❌ Error: " + msg);
-      toast.error("Mint failed: " + msg);
-    } finally {
-      setIsProcessing(false);
+      toast.error("Transaction failed: " + msg);
     }
   };
 
-  if (!isConnected) return <p>🔌 Connect your wallet to claim POAP.</p>;
+  const isDisabled = Boolean(hasClaimed) || isTxPending;
+
+  if (!isConnected) {
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="glass-card p-8 text-center max-w-2xl mx-auto"
+      >
+        <div className="text-5xl mb-4">🔌</div>
+        <p className="text-gray-400">Connect your wallet to claim your POAP</p>
+      </motion.div>
+    );
+  }
 
   return (
-    <div className="claim-section">
-      <p className="text-sm">
-        ENS: <strong>{ensName ?? "— (not set)"}</strong>
-      </p>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="glass-card p-8 max-w-2xl mx-auto"
+    >
+      <div className="text-center mb-6">
+        <div className="text-5xl mb-4">🎟️</div>
+        <h3 className="text-2xl font-bold mb-2">Claim Your POAP</h3>
+        {ensName && (
+          <p className="text-purple-400 text-sm">
+            ENS: <strong>{ensName}</strong>
+          </p>
+        )}
+      </div>
 
-      <button
+      <motion.button
+        whileHover={!isDisabled ? { scale: 1.02, boxShadow: "0 0 30px rgba(102, 126, 234, 0.6)" } : {}}
+        whileTap={!isDisabled ? { scale: 0.98 } : {}}
         onClick={handleClaim}
-        disabled={Boolean(hasClaimed) || isProcessing}
-        style={{
-          backgroundColor: hasClaimed || isProcessing ? "#555" : "#1a1a1a",
-          cursor: hasClaimed || isProcessing ? "not-allowed" : "pointer",
-          color: "#fff",
-          padding: "10px 20px",
-          borderRadius: "8px",
-          border: "1px solid #ccc",
-          marginTop: "12px",
-        }}
+        disabled={isDisabled}
+        className={`w-full px-8 py-4 rounded-lg font-bold text-lg transition-all ${
+          hasClaimed
+            ? "bg-green-600 cursor-not-allowed"
+            : isTxPending
+            ? "bg-yellow-600 cursor-wait"
+            : "bg-linear-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+        } text-white disabled:opacity-70`}
       >
-        {hasClaimed ? "Already Claimed ✅" : (isProcessing ? "Processing..." : "Claim Attendance NFT")}
-      </button>
+        {hasClaimed ? (
+          <span>✅ Already Claimed</span>
+        ) : isTxPending ? (
+          <span className="flex items-center justify-center gap-2">
+            <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></div>
+            Processing...
+          </span>
+        ) : (
+          "🎉 Claim Attendance POAP"
+        )}
+      </motion.button>
 
-      {status && <p style={{ marginTop: "10px" }}>{status}</p>}
-      <p className="text-xs text-gray-400 mt-2">
-        Note: Preferred flow calls <code>EventManager.confirmAttendance(ens)</code> which mints POAP on your behalf.
-      </p>
-    </div>
+      <AnimatePresence mode="wait">
+        {status && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="mt-4 p-4 bg-black bg-opacity-30 rounded-lg text-center"
+          >
+            <p className="text-sm">{status}</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {txHash && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="mt-4 text-xs text-gray-400 text-center break-all"
+        >
+          Transaction: {txHash.slice(0, 10)}...{txHash.slice(-8)}
+        </motion.div>
+      )}
+    </motion.div>
   );
 };
 
